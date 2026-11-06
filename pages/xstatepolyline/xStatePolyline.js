@@ -49,14 +49,15 @@ const polylineMachine = setup({
         addPoint: () => {
             const pos = stage.getPointerPosition();
             const currentPoints = polyline.points(); // Get the current points of the line
-            const newPoints = [...currentPoints, pos.x, pos.y]; // Add the new point to the array
+            const newPoints = [...currentPoints.slice(0, -2), pos.x, pos.y, pos.x, pos.y];
             polyline.points(newPoints); // Set the updated points to the line
             layer.batchDraw(); // Redraw the layer to reflect the changes
         },
         // Abandonner le tracé de la polyline
         abandon: () => {
-            // Supprimer la variable polyline :
-            
+            polyline.destroy();
+            polyline = undefined;
+            layer.batchDraw();
         },
         // Supprimer le dernier point de la polyline
         removeLastPoint: () => {
@@ -71,9 +72,7 @@ const polylineMachine = setup({
     guards: {
         // On peut encore ajouter un point
         pasPlein: () => {
-            // Retourner vrai si la polyline a moins de 10 points
-            // attention : dans le tableau de points, chaque point est représenté par 2 valeurs (coordonnées x et y)
-            
+            return polyline.points().length / 2 - 1 < MAX_POINTS;
         },
         // On peut enlever un point
         plusDeDeuxPoints: () => {
@@ -82,10 +81,34 @@ const polylineMachine = setup({
         },
     },
 }).createMachine({
+    /** @xstate-layout N4IgpgJg5mDOIC5QAcD2AbAngGQJYDswA6XCdMAYgFkB5AVQGUBRAYWwEkWBpAbQAYAuohSpYuAC65U+YSAAeiACx8ArEQAcARmXqAnHwBMuxSs0GANCEyJNK3URVaAzAYOPdAdk0eVANgC+-pZoWHiERMgATmAAtrhgkQAKqATi1PTMbJy8grJoYpLSsgoIHupEBnxOmrr6+k6K6nqW1ggGRHxavnyancpOun4GgcEYOATEUbHxSSn4abSMTLQAakz8Qkgg+RJSMlslKoqaRJpOTbp6vU7dmi2IALTeROeGnU58Hr7Vih4j22MwpNonEEslUhQmLAAMYAQ2QYA2eVEuyKB0QR3apm+tgMxz4viM9wQijcGnUv0amnURlUin+IXG4QgkVhAHcCFB0ksstwkVsdoV9qASg88XwXvpegYmjdDL51MSGr4iAqnB9dJpfB5FLpfL4VAzARMiCz2ZzucxVutcgKUULijYVO0zF4DFrDB4DB5LkqPB4OsZ1HwTI51CojkbQiazRz8FyAEKw6EAa1gyGTiNtIgKe0dbWDpxMl1UZV0BgaxIeeg0NRppMqjXL9KCAOjzNZccTybTGehiM0mxzqOF8iUEaIHnOmP1hkUBqr1ID6nVmr4gx6xijTOIsYtTHmCX5w4d6IQHxO4cU1Q8hjsThUN2JRnsthxtQ+t78htbjKBps7fcYXhLMhwBXM0RFRAVxeRxfC1a9Gj8RRiU0M4iEUXUFQrYNPnVTRAlbfBUAgOBkXbMBkQg0dRRlcoBh6QxZW6b0q29NR1QGNCvVMXUf1GCiSDISi7Wo-M3EUBwajsPhPh8HoFVQlQAz4xxfgrIxt3-KZQVmVIqJHfMHzUeD1F8Y5mynW9fGJWpYJ6apPBqPVzi0mNAPjAzTyg88Tm9Mx1SslQQ2MJxn0fScIxua8mm0PU-kIoA */
     id: "polyLine",
     initial: "idle",
     states: {
-        idle: {},
+        idle: {
+            on: {
+                MOUSECLICK: { target: "premierPoint", actions: ["createLine"] },
+            },
+        },
+        premierPoint: {
+            on: {
+                MOUSECLICK: { target: "drawing", guard: "pasPlein", actions: ["addPoint"] },
+                MOUSEMOVE: { actions: ["setLastPoint"] },
+                Escape: { target: "idle", actions: ["abandon"] },
+            },
+        },
+        drawing: {
+            on: {
+                MOUSECLICK: { guard: "pasPlein", actions: ["addPoint"] },
+                MOUSEMOVE: { actions: ["setLastPoint"] },
+                Backspace: [
+                    { guard: "plusDeDeuxPoints", actions: ["removeLastPoint"] },
+                    { target: "premierPoint", actions: ["removeLastPoint"] },
+                ],
+                Enter: { target: "idle", actions: ["saveLine"] },
+                Escape: { target: "idle", actions: ["abandon"] },
+            },
+        },
     },
 });
 

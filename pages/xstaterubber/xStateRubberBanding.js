@@ -46,11 +46,12 @@ const rubberBandingMachine = setup({
     // Sauvegarde la ligne
     saveLine: () => {
       rubber.remove(); // On l'enlève de la couche temporaire
-      rubber.stroke("black"); // On change la couleur
+      rubber.stroke("blue"); // On change la couleur
       dessin.add(rubber); // On l'ajoute à la couche de dessin
     },
   },
 }).createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QCcCuAjdZkCECGAdhAJYFQB0xEANmAMQCyA8gKoDKAogMIAyAklwDSAbQAMAXUSgADgHtYxAC7FZBKSAAeiAIwBmUeQCsok6N0AmABy6AnIYAslgOwAaEAE8dTy+VHe9uroAbPbm5jaWAL6RbmiY2PhEpBQQyHgA7smMrJzMAGocYpJIIHIKyqrqWghWTuT22vZ+opba5rr2uq4eOqLmRraiQSZdTk4thtGxGFi4hCRk5KkZWczs3PxCReplSipqJdV6BsamFtZ2jt2eCK1Gpma6DoHaQebRMSAEshBw6nGzRILKA7eR7SqHRAAWiCbhuMN8DyRDycUxAAIS82SlBoYFB5X2VUQoThOhsugGukshlsTXsNhs2jRGLmSUWy0yZHx4IOoGq+hs5CCwScule1KcQW8pJqons5G02ic2hsJnskqCqqCH0iQA */
   id: "rubberBanding",
   initial: "idle",
   states: {
